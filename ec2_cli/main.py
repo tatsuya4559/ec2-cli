@@ -77,6 +77,7 @@ async def start_instance(instance_id):
     instance = ec2.Instance(instance_id)
     if instance.state["Name"] != "stopped":
         click.echo(f"Oops, ec2 instance({instance_id}) is not stopped.", err=True)
+        return
     instance.start()
     click.echo(f"ec2 instance({instance_id}) is now starting...", err=True)
     loop = asyncio.get_event_loop()
@@ -103,6 +104,7 @@ async def stop_instance(instance_id):
     instance = ec2.Instance(instance_id)
     if instance.state["Name"] != "running":
         click.echo(f"Oops, ec2 instance({instance_id}) is not running.", err=True)
+        return
     instance.stop()
     click.echo(f"ec2 instance({instance_id}) is now stopping...", err=True)
     loop = asyncio.get_event_loop()
