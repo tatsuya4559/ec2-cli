@@ -50,8 +50,10 @@ def cli():
 
 @cli.command("ls")
 @click.argument("name", default="")
-@click.option("-s", "--state", default="", help="filtered by state if given")
+@click.option("-s", "--state", default="", help="Filter instances by state.", metavar="STATE")
 def list_ec2_instances(name, state):
+    """List ec2 instances.
+    """
     instances = describe_instances()
     for i in instances:
         if (
@@ -82,13 +84,10 @@ async def start_instance(instance_id):
     click.echo(f"ec2 instance({instance_id}) has started🚀", err=True)
 
 
-@cli.command()
-@click.argument("instance_ids", nargs=-1)
-def start(instance_ids):
+@cli.command("start")
+@click.argument("instance_ids", nargs=-1, metavar="[INSTANCE_ID ...]")
+def start_ec2_instances(instance_ids):
     """Start ec2 instances.
-
-    Args:
-        instance_ids: list of instance id to start
     """
     if not sys.stdin.isatty():
         # stdin from pipe
@@ -111,13 +110,10 @@ async def stop_instance(instance_id):
     click.echo(f"ec2 instance({instance_id}) has stopped💤", err=True)
 
 
-@cli.command()
-@click.argument("instance_ids", nargs=-1)
-def stop(instance_ids):
+@cli.command("stop")
+@click.argument("instance_ids", nargs=-1, metavar="[INSTANCE_ID ...]")
+def stop_ec2_instances(instance_ids):
     """Stop ec2 instances.
-
-    Args:
-        instance_ids: list of instance id to stop
     """
     if not sys.stdin.isatty():
         # stdin from pipe
