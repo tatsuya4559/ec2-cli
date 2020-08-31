@@ -17,7 +17,7 @@ setup(
     install_requires=install_requirements,
     entry_points={
         "console_scripts": [
-            "ec2=ec2_cli.main:main",
+            "ec2=ec2_cli.main:cli",
         ]
     },
     classifiers=[

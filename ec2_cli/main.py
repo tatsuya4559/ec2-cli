@@ -128,9 +128,5 @@ def stop(instance_ids):
     loop.run_until_complete(tasks)
 
 
-def main():
-    cli()
-
-
 if __name__ == "__main__":
-    main()
+    cli()
