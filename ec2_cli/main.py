@@ -1,9 +1,9 @@
-import sys
 import asyncio
+import sys
 from itertools import chain
 
-import click
 import boto3
+import click
 
 
 def describe_instances():
