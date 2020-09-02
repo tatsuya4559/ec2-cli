@@ -6,28 +6,35 @@ import boto3
 import click
 
 
+class Instance:
+    def __init__(self, data):
+        self._data = data
+
+    @property
+    def instance_id(self):
+        return self._data["InstanceId"]
+
+    @property
+    def name(self):
+        return [e["Value"] for e in self._data["Tags"] if e["Key"] == "Name"][0]
+
+    @property
+    def state(self):
+        return self._data["State"]["Name"]
+
+    @property
+    def private_ip(self):
+        return self._data["NetworkInterfaces"][0]["PrivateIpAddress"]
+
+
 def describe_instances():
     client = boto3.client("ec2")
     instances = client.describe_instances()
-    return list(
-        chain.from_iterable([r["Instances"] for r in instances["Reservations"]])
-    )
 
-
-def get_instance_id(instance):
-    return instance["InstanceId"]
-
-
-def get_name(instance):
-    return [e["Value"] for e in instance["Tags"] if e["Key"] == "Name"][0]
-
-
-def get_state(instance):
-    return instance["State"]["Name"]
-
-
-def get_private_ip(instance):
-    return instance["NetworkInterfaces"][0]["PrivateIpAddress"]
+    result = []
+    for e in chain.from_iterable(r["Instances"] for r in instances["Reservations"]):
+        result.append(Instance(e))
+    return result
 
 
 STATE_COLORS = {
@@ -50,23 +57,24 @@ def cli():
 
 @cli.command("ls")
 @click.argument("name", default="")
-@click.option("-s", "--state", default="", help="Filter instances by state.", metavar="STATE")
+@click.option(
+    "-s", "--state", default="", help="Filter instances by state.", metavar="STATE"
+)
 def list_ec2_instances(name, state):
-    """List ec2 instances.
-    """
+    """List ec2 instances."""
     instances = describe_instances()
     for i in instances:
         if (
-            name.lower() in get_name(i).lower()
-            and state.lower() in get_state(i).lower()
+            name.lower() in i.name.lower()
+            and state.lower() in i.state.lower()
         ):
             click.echo(
                 "\t".join(
                     [
-                        get_instance_id(i),
-                        get_name(i),
-                        colorize_state(get_state(i)),
-                        get_private_ip(i),
+                        i.instance_id,
+                        i.name,
+                        colorize_state(i.state),
+                        i.private_ip,
                     ]
                 )
             )
@@ -88,8 +96,7 @@ async def start_instance(instance_id):
 @cli.command("start")
 @click.argument("instance_ids", nargs=-1, metavar="[INSTANCE_ID ...]")
 def start_ec2_instances(instance_ids):
-    """Start ec2 instances.
-    """
+    """Start ec2 instances."""
     if not sys.stdin.isatty():
         # stdin from pipe
         instance_ids = click.get_text_stream("stdin").read().strip().split()
@@ -115,8 +122,7 @@ async def stop_instance(instance_id):
 @cli.command("stop")
 @click.argument("instance_ids", nargs=-1, metavar="[INSTANCE_ID ...]")
 def stop_ec2_instances(instance_ids):
-    """Stop ec2 instances.
-    """
+    """Stop ec2 instances."""
     if not sys.stdin.isatty():
         # stdin from pipe
         instance_ids = click.get_text_stream("stdin").read().strip().split()
