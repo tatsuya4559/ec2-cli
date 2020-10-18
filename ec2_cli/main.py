@@ -1,6 +1,6 @@
 import asyncio
 import sys
-from itertools import chain
+from itertools import chain, cycle
 
 import boto3
 import click
@@ -80,6 +80,19 @@ def list_ec2_instances(name, state):
             )
 
 
+async def spin(msg):
+    for char in cycle('|/-\\'):
+        status = f'{char} {msg}'
+        sys.stderr.write(status)
+        sys.stderr.flush()
+        sys.stderr.write('\x08' * len(status))
+        try:
+            await asyncio.sleep(0.1)
+        except asyncio.CancelledError:
+            break
+    sys.stderr.write(' ' * len(status) + '\x08' * len(status))
+
+
 async def start_instance(instance_id):
     ec2 = boto3.resource("ec2")
     instance = ec2.Instance(instance_id)
@@ -87,9 +100,10 @@ async def start_instance(instance_id):
         click.echo(f"Oops, ec2 instance({instance_id}) is not stopped.", err=True)
         return
     instance.start()
-    click.echo(f"ec2 instance({instance_id}) is now starting...", err=True)
+    spinner = asyncio.create_task(spin(f"ec2 instance({instance_id}) is now starting..."))
     loop = asyncio.get_running_loop()
     await loop.run_in_executor(None, instance.wait_until_running)
+    spinner.cancel()
     click.echo(f"ec2 instance({instance_id}) has started🚀", err=True)
 
 
@@ -114,9 +128,10 @@ async def stop_instance(instance_id):
         click.echo(f"Oops, ec2 instance({instance_id}) is not running.", err=True)
         return
     instance.stop()
-    click.echo(f"ec2 instance({instance_id}) is now stopping...", err=True)
+    spinner = asyncio.create_task(spin(f"ec2 instance({instance_id}) is now stopping..."))
     loop = asyncio.get_running_loop()
     await loop.run_in_executor(None, instance.wait_until_stopped)
+    spinner.cancel()
     click.echo(f"ec2 instance({instance_id}) has stopped💤", err=True)
 
 
