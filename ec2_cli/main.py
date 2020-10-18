@@ -88,7 +88,7 @@ async def start_instance(instance_id):
         return
     instance.start()
     click.echo(f"ec2 instance({instance_id}) is now starting...", err=True)
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
     await loop.run_in_executor(None, instance.wait_until_running)
     click.echo(f"ec2 instance({instance_id}) has started🚀", err=True)
 
@@ -104,6 +104,7 @@ def start_ec2_instances(instance_ids):
     loop = asyncio.get_event_loop()
     tasks = asyncio.gather(*[start_instance(i) for i in instance_ids])
     loop.run_until_complete(tasks)
+    loop.close()
 
 
 async def stop_instance(instance_id):
@@ -114,7 +115,7 @@ async def stop_instance(instance_id):
         return
     instance.stop()
     click.echo(f"ec2 instance({instance_id}) is now stopping...", err=True)
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
     await loop.run_in_executor(None, instance.wait_until_stopped)
     click.echo(f"ec2 instance({instance_id}) has stopped💤", err=True)
 
@@ -130,6 +131,7 @@ def stop_ec2_instances(instance_ids):
     loop = asyncio.get_event_loop()
     tasks = asyncio.gather(*[stop_instance(i) for i in instance_ids])
     loop.run_until_complete(tasks)
+    loop.close()
 
 
 if __name__ == "__main__":
