@@ -16,7 +16,10 @@ class Instance:
 
     @property
     def name(self):
-        return [e["Value"] for e in self._data["Tags"] if e["Key"] == "Name"][0]
+        try:
+            return [e["Value"] for e in self._data["Tags"] if e["Key"] == "Name"][0]
+        except IndexError:
+            return ""
 
     @property
     def state(self):
